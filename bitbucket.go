@@ -536,3 +536,11 @@ type DeployKeyOptions struct {
 	Label    string `json:"label"`
 	Key      string `json:"key"`
 }
+
+type SSHKeyOptions struct {
+	Owner    string `json:"owner"`
+	RepoSlug string `json:"repo_slug"`
+	Id       int    `json:"id"`
+	Label    string `json:"label"`
+	Key      string `json:"key"`
+}
