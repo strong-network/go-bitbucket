@@ -35,7 +35,7 @@ func apiBaseUrl() (*url.URL, error) {
 
 type Client struct {
 	Auth         *auth
-	Users        users
+	Users        *Users
 	User         user
 	Teams        teams
 	Repositories *Repositories
