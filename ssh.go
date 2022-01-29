@@ -100,16 +100,21 @@ func decodeSSHKeys(keysResponse interface{}) (*SSHKeyRes, error) {
 	return keysResp, nil
 }
 
-func (sk *SSHKeys) Create(opt *SSHKeyOptions) (*SSHKey, error) {
-	data, err := buildSSHKeysBody(opt)
+func (sk *SSHKeys) Create(ro *SSHKeyOptions) (*SSHKey, error) {
+	data, err := buildSSHKeysBody(ro)
 	if err != nil {
 		return nil, err
 	}
-	urlStr := sk.c.requestUrl("/users/%s/ssh-keys", opt.Owner)
+	urlStr := sk.c.requestUrl("/users/%s/ssh-keys", ro.Owner)
 	response, err := sk.c.execute("POST", urlStr, data)
 	if err != nil {
 		return nil, err
 	}
 
 	return decodeSSHKey(response)
+}
+
+func (sk *SSHKeys) Delete(ro *SSHKeyOptions) (interface{}, error) {
+	urlStr := sk.c.requestUrl("/users/%s/ssh-keys/%d", ro.Owner, ro.Id)
+	return sk.c.execute("DELETE", urlStr, "")
 }
