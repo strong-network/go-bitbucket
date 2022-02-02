@@ -12,7 +12,7 @@ type SSHKeys struct {
 }
 
 type SSHKey struct {
-	Id        int    `json:"id"`
+	Uuid      string `json:"uuid"`
 	Label     string `json:"label"`
 	Key       string `json:"key"`
 	Comment   string `json:"comment"`
@@ -115,6 +115,6 @@ func (sk *SSHKeys) Create(ro *SSHKeyOptions) (*SSHKey, error) {
 }
 
 func (sk *SSHKeys) Delete(ro *SSHKeyOptions) (interface{}, error) {
-	urlStr := sk.c.requestUrl("/users/%s/ssh-keys/%d", ro.Owner, ro.Id)
+	urlStr := sk.c.requestUrl("/users/%s/ssh-keys/%s", ro.Owner, ro.Uuid)
 	return sk.c.execute("DELETE", urlStr, "")
 }

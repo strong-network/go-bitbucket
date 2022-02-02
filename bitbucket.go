@@ -539,7 +539,7 @@ type DeployKeyOptions struct {
 
 type SSHKeyOptions struct {
 	Owner    string `json:"owner"`
-	Id       int    `json:"id"`
+	Uuid     string `json:"uuid"`
 	Label    string `json:"label"`
 	Key      string `json:"key"`
 }
