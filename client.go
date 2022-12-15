@@ -60,6 +60,15 @@ type auth struct {
 	bearerToken    string
 }
 
+type Response struct {
+	Size     int           `json:"size"`
+	Page     int           `json:"page"`
+	Pagelen  int           `json:"pagelen"`
+	Next     string        `json:"next"`
+	Previous string        `json:"previous"`
+	Values   []interface{} `json:"values"`
+}
+
 // Uses the Client Credentials Grant oauth2 flow to authenticate to Bitbucket
 func NewOAuthClientCredentials(i, s string) *Client {
 	a := &auth{appID: i, secret: s}
@@ -237,44 +246,6 @@ func (c *Client) execute(method string, urlStr string, text string) (interface{}
 	result, err := c.doRequest(req, false)
 	if err != nil {
 		return nil, err
-	}
-
-	//autopaginate.
-	resultMap, isMap := result.(map[string]interface{})
-	if isMap {
-		nextIn := resultMap["next"]
-		valuesIn := resultMap["values"]
-		if nextIn != nil && valuesIn != nil {
-			nextUrl := nextIn.(string)
-			if nextUrl != "" {
-				valuesSlice := valuesIn.([]interface{})
-				if valuesSlice != nil {
-					nextResult, err := c.execute(method, nextUrl, text)
-					if err != nil {
-						return nil, err
-					}
-					nextResultMap, isNextMap := nextResult.(map[string]interface{})
-					if !isNextMap {
-						return nil, fmt.Errorf("next page result is not map, it's %T", nextResult)
-					}
-					nextValuesIn := nextResultMap["values"]
-					if nextValuesIn == nil {
-						return nil, fmt.Errorf("next page result has no values")
-					}
-					nextValuesSlice, isSlice := nextValuesIn.([]interface{})
-					if !isSlice {
-						return nil, fmt.Errorf("next page result 'values' is not slice")
-					}
-					valuesSlice = append(valuesSlice, nextValuesSlice...)
-					resultMap["values"] = valuesSlice
-					delete(resultMap, "page")
-					delete(resultMap, "pagelen")
-					delete(resultMap, "max_depth")
-					delete(resultMap, "size")
-					result = resultMap
-				}
-			}
-		}
 	}
 
 	return result, nil
