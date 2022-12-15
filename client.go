@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"mime/multipart"
 	"net/http"
@@ -413,7 +414,6 @@ func (c *Client) doPaginatedRequest(req *http.Request, emptyResponse bool) (inte
 	if err := json.Unmarshal(responseBytes, &result); err != nil {
 		return resBody, err
 	}
-
 	return result, nil
 }
 
