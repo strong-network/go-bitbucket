@@ -252,7 +252,7 @@ func (c *Client) execute(method string, urlStr string, text string) (interface{}
 	return result, nil
 }
 
-func (c *Client) executePaginated(method string, urlStr string, text string) (interface{}, error) {
+func (c *Client) executePaginated(method string, urlStr string, text string, page *int) (interface{}, error) {
 	if c.Pagelen != DEFAULT_PAGE_LENGTH {
 		urlObj, err := url.Parse(urlStr)
 		if err != nil {
@@ -274,7 +274,7 @@ func (c *Client) executePaginated(method string, urlStr string, text string) (in
 	}
 
 	c.authenticateRequest(req)
-	result, err := c.doPaginatedRequest(req, false)
+	result, err := c.doPaginatedRequest(req, page, false)
 	if err != nil {
 		return nil, err
 	}
@@ -361,7 +361,19 @@ func (c *Client) doRequest(req *http.Request, emptyResponse bool) (interface{}, 
 	return result, nil
 }
 
-func (c *Client) doPaginatedRequest(req *http.Request, emptyResponse bool) (interface{}, error) {
+func (c *Client) doPaginatedRequest(req *http.Request, page *int, emptyResponse bool) (interface{}, error) {
+	disableAutoPaging := c.DisableAutoPaging
+	curPage := 1
+	if page != nil {
+		disableAutoPaging = true
+		curPage = *page
+		q := req.URL.Query()
+		q.Set("page", strconv.Itoa(curPage))
+		req.URL.RawQuery = q.Encode()
+	}
+	// q.Encode() does not encode "~".
+	req.URL.RawQuery = strings.ReplaceAll(req.URL.RawQuery, "~", "%7E")
+
 	resBody, err := c.doRawRequest(req, emptyResponse)
 	if err != nil {
 		return nil, err
@@ -378,18 +390,15 @@ func (c *Client) doPaginatedRequest(req *http.Request, emptyResponse bool) (inte
 	}
 
 	responsePaginated := &Response{}
-	var curPage int
-
 	err = json.Unmarshal(responseBytes, responsePaginated)
 	if err == nil && len(responsePaginated.Values) > 0 {
-		var values []interface{}
+		values := responsePaginated.Values
 		for {
-			curPage++
-			values = append(values, responsePaginated.Values...)
-			if c.DisableAutoPaging || len(responsePaginated.Next) == 0 ||
+			if disableAutoPaging || responsePaginated.Next == "" ||
 				(curPage >= c.LimitPages && c.LimitPages != 0) {
 				break
 			}
+			curPage++
 			newReq, err := http.NewRequest(req.Method, responsePaginated.Next, nil)
 			if err != nil {
 				return resBody, err
@@ -402,6 +411,7 @@ func (c *Client) doPaginatedRequest(req *http.Request, emptyResponse bool) (inte
 
 			responsePaginated = &Response{}
 			json.NewDecoder(resp).Decode(responsePaginated)
+			values = append(values, responsePaginated.Values...)
 		}
 		responsePaginated.Values = values
 		responseBytes, err = json.Marshal(responsePaginated)
