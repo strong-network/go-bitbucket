@@ -114,6 +114,16 @@ func (sk *SSHKeys) Create(ro *SSHKeyOptions) (*SSHKey, error) {
 	return decodeSSHKey(response)
 }
 
+func (sk *SSHKeys) Get(ro *SSHKeyOptions) (*SSHKey, error) {
+	urlStr := sk.c.requestUrl("/users/%s/ssh-keys", ro.Owner)
+	response, err := sk.c.execute("GET", urlStr, "")
+	if err != nil {
+		return nil, err
+	}
+
+	return decodeSSHKey(response)
+}
+
 func (sk *SSHKeys) Delete(ro *SSHKeyOptions) (interface{}, error) {
 	urlStr := sk.c.requestUrl("/users/%s/ssh-keys/%s", ro.Owner, ro.Uuid)
 	return sk.c.execute("DELETE", urlStr, "")
