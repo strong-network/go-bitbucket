@@ -115,7 +115,7 @@ func (sk *SSHKeys) Create(ro *SSHKeyOptions) (*SSHKey, error) {
 }
 
 func (sk *SSHKeys) Get(ro *SSHKeyOptions) (*SSHKey, error) {
-	urlStr := sk.c.requestUrl("/users/%s/ssh-keys", ro.Owner)
+	urlStr := sk.c.requestUrl("/users/%s/ssh-keys/%s", ro.Owner, ro.Uuid)
 	response, err := sk.c.execute("GET", urlStr, "")
 	if err != nil {
 		return nil, err
